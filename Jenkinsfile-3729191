@@ -23,7 +23,8 @@ pipeline {
       steps {
         script {
 		docker.withTool('docker'){
-
+			docker.withRegistry('https://artifactory.dagility.com', 'dbe6f213-5d8a-4624-b40a-610d5670d326'){
+				
         
             sh script: '''
 docker build -t artifactory.dagility.com/docker/vdtesttrigs-frontend:latest .
@@ -31,12 +32,13 @@ docker build -t artifactory.dagility.com/docker/vdtesttrigs-frontend:latest .
             sh script: '''
 docker push artifactory.dagility.com/docker/vdtesttrigs-frontend:latest
 ''', label: 'dbaafa'
-        		}
+        			}
+		}
 	}
 script { sh script: 'sleep 0.005', label: '1t2w2u'}
 
         sh script: 'helm package chart', label: 'yrl20w'
-        withCredentials([usernamePassword(credentialsId: '', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+        withCredentials([usernamePassword(credentialsId: 'dbe6f213-5d8a-4624-b40a-610d5670d326', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
 
         script {
             sh script: '''
@@ -45,7 +47,9 @@ curl -u$USER:$PASS -T vdtesttrigs-frontend-chart-0.1.0.tgz 'https://artifactory.
         } // end step group script
 script { sh script: 'sleep 0.005', label: 'icoxs7'}
 } // end step group
-        sh script: 'helm repo add vdtesttrigs-frontend https://artifactory.dagility.com/artifactory/helm ', label: 'v8rljh'
+        withCredentials([   usernamePassword(credentialsId: 'dbe6f213-5d8a-4624-b40a-610d5670d326', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+   sh script: 'helm repo add vdtesttrigs-frontend https://artifactory.dagility.com/artifactory/helm --username $USER --password $PASS ', label: 'v8rljh' 
+}
         sh script: 'helm repo update', label: 'xkb2da'
         sh script: 'helm upgrade vdtesttrigs-frontend-deployment vdtesttrigs-frontend/vdtesttrigs-frontend-chart --install --values chart-values.yaml --namespace default --set ingress.hosts[0].host=vdtesttrigs-frontend-default.dagility.com', label: 'j0myop'
       } //end steps
